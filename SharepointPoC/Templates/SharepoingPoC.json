@@ -1,42 +1,122 @@
 ﻿{
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {
+  "parameters": {
+    "name": {
+      "type": "string"
     },
-    "variables": {
-        "VNET01Prefix": "10.0.0.0/16",
-        "VNET01Subnet1Name": "Subnet-1",
-      "VNET01Subnet1Prefix": "10.0.0.0/24",
-      "VNET01GatewaySubnetName": "GatewaySubnet",
-      "VNET01GatewayPrefix": "10.0.254/0/24"
+    "sku": {
+      "type": "string",
+      "defaultValue": "Basic"
     },
-    "resources": [
-        {
-            "name": "VNET01",
-            "type": "Microsoft.Network/virtualNetworks",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2015-06-15",
-            "dependsOn": [ ],
-            "tags": {
-                "displayName": "VNET01"
-            },
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[variables('VNET01Prefix')]"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "[variables('VNET01Subnet1Name')]",
-                        "properties": {
-                            "addressPrefix": "[variables('VNET01Subnet1Prefix')]"
-                        }
-                    }
-                ]
-            }
-        }
-    ],
-    "outputs": {
+    "gatewayType": {
+      "type": "string",
+      "defaultValue": "Vpn",
+      "allowedValues": [
+        "Vpn",
+        "ExpressRoute"
+      ]
+    },
+    "vpnType": {
+      "type": "string",
+      "defaultValue": "RouteBased",
+      "allowedValues": [
+        "RouteBased",
+        "PolicyBased"
+      ]
+    },
+    "existingVirtualNetworkName": {
+      "type": "string"
+    },
+    "newSubnetName": {
+      "type": "string"
+    },
+    "subnetAddressPrefix": {
+      "type": "string"
+    },
+    "vpnPublicIpAddressName": {
+      "type": "string",
+      "defaultValue" : "VPNPIP"
     }
-}
+  },
+  "variables": {
+    "VNET01Name": "VNET01",
+    "VNET01Prefix": "10.0.0.0/16",
+    "VNET01Subnet1Name": "Subnet-1",
+    "VNET01Subnet1Prefix": "10.0.0.0/24",
+    "VNET01GatewaySubnetName": "GatewaySubnet",
+    "VNET01GatewayPrefix": "10.0.254.0/24",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('VNET01Name'))]",
+    "gatewaySubnetRef1": "[concat(variables('vnetID'),'/subnets/',variables('VNet01GatewaySubnetName'))]"
+  },
+  "resources": [
+    {
+      "name": "[variables('VNET01Name')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "VNET01"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('VNET01Prefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('VNET01Subnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('VNET01Subnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('vpnPublicIpAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "[parameters('name')]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('VNET01Name'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('vpnPublicIpAddressName'))]"
+      ],
+      "properties": {
+        "gatewayType": "[parameters('gatewayType')]",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('gatewaySubnetRef1')]"
+              },
+              "publicIpAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('vpnPublicIpAddressName'))]"
+              }
+            }
+          }
+        ],
+        "enableBgp": false,
+        "vpnType": "[parameters('vpnType')]",
+        "sku": {
+          "name": "[parameters('sku')]",
+          "tier": "[parameters('sku')]"
+        }
+      },
+
+      "outputs": {
+      }
+    }

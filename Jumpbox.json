@@ -1,0 +1,303 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location" : {
+      "type": "string"
+     },
+     "locationcode" : {
+      "type": "string"
+     },
+    "vnetRG": {
+      "type": "string"
+    },
+    "vnetName": {
+      "type": "string"
+
+    },
+    "adminusername": {
+      "type": "string"
+    },
+    "localadminpassword": {
+      "type": "string"
+    },
+    "DataDiskSize": {
+      "type": "string"
+    },
+    
+    "SubnetName": {
+      "type": "string"
+    },
+    "domainToJoin": {
+      "type": "string"
+    },
+    "ouPath": {
+      "type": "string"
+    },
+    "domainUsername": {
+      "type": "string"
+    },
+    "domainJoinOptions": {
+      "type": "int"
+    },
+    "domainPassword": {
+      "type": "string"
+    },
+    "DC1IP" : {
+      "type": "string"
+    },
+    "DC2IP" : {
+      "type": "string"
+    },
+    "blobEncryptionEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable or disable Blob encryption at Rest."
+      }
+    }
+
+
+  },
+  "variables": {
+    "storageaccountName" : "[concat('actaz',parameters('locationcode'),'ipinfstr03')]",
+    "vmName" : "[concat('a',parameters('locationcode'),'wjb01')]",
+    "vmNicName" : "[concat(variables('vmName'),'nic01')]",
+    "publicIPAddressType" : "Dynamic",
+    "publicIPAddressName1" : "[concat(variables('vmName'), 'pip')]",
+   
+
+    "Windows": {
+      "publisher": "MicrosoftWindowsServer",
+      "offer": "WindowsServer",
+      "sku": "2016-Datacenter",
+      "version": "latest"
+    },
+    "imageReference": "[variables('Windows')]",
+    "vnetID": "[resourceId(parameters('vnetRG'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('SubnetName'))]"
+
+
+
+  },
+  "resources": [
+    {
+      "apiVersion": "[providers('Microsoft.Storage','storageAccounts').apiVersions[0]]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('storageAccountName')]",
+        "tier" : "Microsoft.Storage/storageAccounts",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "sku" : {
+          "name" : "Standard_LRS"
+      },
+
+      "properties": {
+        "encryption" :{
+          "keySource" :"Microsoft.Storage",
+          "services" :{
+            "blob" :{
+              "enabled" : "[parameters('blobEncryptionEnabled')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Compute','virtualMachines/extensions').apiVersions[0]]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('vmname'),'/joindomain')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "resourcename" : "[concat(variables('vmname'),'/joindomain')]",
+        "tier" : "Microsoft.Compute/virtualMachines/extensions",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmname'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "Name": "[parameters('domainToJoin')]",
+          "OUPath": "[parameters('ouPath')]",
+          "User": "[concat(parameters('domainToJoin'), '\\', parameters('domainUsername'))]",
+          "Restart": "true",
+          "Options": "[parameters('domainJoinOptions')]"
+        },
+        "protectedSettings": {
+          "Password": "[parameters('domainPassword')]"
+        }
+      }
+    },
+    
+  {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('vmName')]",
+      "apiVersion": "[providers('Microsoft.Compute','virtualMachines').apiVersions[0]]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('vmName')]",
+        "tier" : "Microsoft.Compute/virtualMachines",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('vmNicName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountName'))]"
+      ],
+      "properties": {
+       
+        "hardwareProfile": {
+          "vmSize": "Standard_D2_v2"
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('localadminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "datadisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "[parameters('DataDiskSize')]",
+              "lun" : 0,
+              "vhd" : {
+                "uri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net/', 'vhds', '/', variables('vmName'), 'datadisk1', '.vhd')]"
+              },
+              "caching": "none",
+              "createoption" : "Empty"
+            }
+          ],
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+                "uri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net/', 'vhds', '/', variables('vmName'), 'osdisk', '.vhd')]"
+            },
+            "caching": "readwrite",
+            "createoption": "FromImage"
+          }
+          
+        },
+        
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('vmNicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+              "enabled": true,
+              "storageUri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net')]"
+          }
+      }
+        
+      }
+    
+    },
+   
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName1')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('publicIPAddressName1')]",
+        "tier" : "Microsoft.Network/publicIPAddresses",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]"
+      }
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Network','networkInterfaces').apiVersions[0]]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('vmNicName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('vmNicName')]",
+        "tier" : "Microsoft.Network/networkInterfaces",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName1'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+                "privateIPAllocationMethod": "Dynamic",
+                "publicIPAddress": {
+                  "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName1'))]"
+                },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            
+              
+            }
+          }
+        ],
+        "dnsSettings" :{
+          "dnsServers" : [
+            "[parameters('DC1IP')]",
+            "[parameters('DC2IP')]"
+          ]
+        },
+        "enableIPForwarding" : true
+      }
+    }
+    
+
+
+
+  ],
+  "outputs": {
+   
+
+
+  }
+
+
+}

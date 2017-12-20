@@ -1,0 +1,88 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "connectionName": {
+      "type": "string"
+    },
+    "sharedKey": {
+      "type": "string"
+    },
+    "vnetGWid": {
+      "type": "string"
+    },
+    "routingweight": {
+      "type": "int"
+    },
+    "localGWid": {
+      "type": "string"
+    },
+    "saLifeTimeSeconds": {
+      "type": "int"
+    },
+    "saDataSizeKilobytes": {
+      "type": "int"
+    },
+    "ipsecEncryption": {
+      "type": "string"
+    },
+    "ipsecIntegrity": {
+      "type": "string"
+    },
+    "ikeEncryption": {
+      "type": "string"
+    },
+    "ikeIntegrity": {
+      "type": "string"
+    },
+    "dhGroup": {
+      "type": "string"
+    },
+    "pfsGroup": {
+      "type": "string"
+    }
+  },
+    "resources": [
+        {
+            "apiVersion": "[providers('Microsoft.Network','connections').apiVersions[0]]",
+            "name": "[parameters('connectionName')]",
+            "type": "Microsoft.Network/connections",
+            "location": "[parameters('location')]",
+            
+            "properties": {
+              "virtualNetworkGateway1": {
+                "id": "[parameters('vnetGWid')]"
+              },
+              "localNetworkGateway2": {
+                "id": "[parameters('localGWid')]"
+              },
+              "ipsecpolicies" : [
+                {
+                  "saLifeTimeSeconds": "[parameters('saLifeTimeSeconds')]",
+                  "saDataSizeKilobytes": "[parameters('saDataSizeKilobytes')]",
+                  "ipsecEncryption": "[parameters('ipsecEncryption')]",
+                  "ipsecIntegrity": "[parameters('ipsecIntegrity')]",
+                  "ikeEncryption": "[parameters('ikeEncryption')]",
+                  "ikeIntegrity": "[parameters('ikeIntegrity')]",
+                  "dhGroup": "[parameters('dhGroup')]",
+                  "pfsGroup": "[parameters('pfsGroup')]"
+                }
+              ]
+              ,
+              "connectionType": "IPsec",
+              "usePolicyBasedTrafficSelectors" : true,
+              "routingWeight": "[parameters('routingweight')]",
+              "sharedKey": "[parameters('sharedKey')]"
+              
+            }
+          }
+    ]
+}
+
+
+
+
+

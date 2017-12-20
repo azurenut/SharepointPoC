@@ -1,0 +1,113 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "locationcode": {
+      "type": "string"
+    },
+    "vnetID": {
+      "type": "string"
+    },
+    "vnetgatewayname": {
+      "type": "string"
+    },
+    "vnetgatewaypipname": {
+      "type": "string"
+    }
+
+
+  },
+  "variables": {
+    "gatewayname": "[parameters('vnetgatewayname')]",
+    "gatewaypublicIPName": "[parameters('vnetgatewaypipname')]",
+    "gwSubnetRef": "[concat(parameters('vnetID'),'/subnets/','GatewaySubnet')]"
+
+
+
+
+  },
+  "resources": [
+    {
+      "apiVersion": "[providers('Microsoft.Network','publicIPAddresses').apiVersions[0]]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('gatewayPublicIPName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('gatewayPublicIPName')]",
+        "tier" : "Microsoft.Network/publicIPAddresses",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "properties": {
+          "publicIPAllocationMethod": "Dynamic"
+      }
+
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Network','virtualNetworkGateways').apiVersions[0]]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[variables('gatewayName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('gatewayName')]",
+        "tier" : "Microsoft.Network/virtualNetworkGateways",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "dependsOn": [
+          "[concat('Microsoft.Network/publicIPAddresses/', variables('gatewayPublicIPName'))]"
+      ],
+      
+      "properties": {
+          "ipConfigurations": [
+              {
+                  "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                          "id": "[variables('gwSubnetRef')]"
+                      },
+                      "publicIPAddress": {
+                          "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('gatewayPublicIPName'))]"
+                      }
+                  },
+                  "name": "vnetGatewayConfig1"
+              }
+          ],
+          "sku" : {
+            "name" : "Standard",
+            "tier" : "Standard" 
+          },
+          "gatewayType": "Vpn",
+          "vpnType": "RouteBased",
+          "enableBgp": "false"
+          
+      }
+  }
+    
+
+
+  ],
+  "outputs": {
+     "gatewayID" : {
+       "type": "string",
+       "value" : "[resourceId('Microsoft.Network/virtualNetworkGateways',variables('gatewayname'))]"
+     }
+
+
+  }
+
+
+}

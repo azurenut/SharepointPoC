@@ -1,0 +1,27 @@
+{
+    "delay": 30,
+    "management": {
+      "name": "realexvsecmgmt",
+      "host": "localhost"
+    },
+    "templates": {
+      "my-template": {
+        "one-time-password": "f23tq9sd",
+        "version": "R77.30",
+        "policy": "AZURE-POLICY"
+      }
+    },
+    "controllers": {
+      "azure": {
+        "class": "Azure",
+        "subscription": "63884bac-aa0e-4fef-8a29-0984dcc763b1",
+        "envrionment": "AzureCloud",
+        "credentials": {
+          "tenant": "cdefd620-072d-4f7f-b85c-cbfd61e44b55",
+          "grant_type": "client_credentials",
+          "client_id": "87a12640-9908-4b26-89e4-c9047ea8db74",
+          "client_secret": "tJkMbaZH2h4bnWThBJTeWZyVpuaCRRMAR3kgRksyRU4="
+        }
+      }
+    }
+  }

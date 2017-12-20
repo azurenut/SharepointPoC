@@ -1,0 +1,50 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "connectionName": {
+      "type": "string"
+    },
+    "ERvnetGWid": {
+      "type": "string"
+    },
+    "ERCircuitID": {
+      "type": "string"
+    },
+    "ConnectionType": {
+      "type": "string",
+      "defaultValue" : "ExpressRoute"
+    },
+    "routingweight": {
+      "type": "int"
+    }
+  },
+    "resources": [
+        {
+            "apiVersion": "[providers('Microsoft.Network','connections').apiVersions[0]]",
+            "name": "[parameters('connectionName')]",
+            "type": "Microsoft.Network/connections",
+            "location": "[parameters('location')]",
+            
+            "properties": {
+              "virtualNetworkGateway1": {
+                "id": "[parameters('ERvnetGWid')]"
+              },
+              "peer": {
+                "id": "[parameters('ERCircuitID')]"
+              },
+              "connectionType": "[parameters('ConnectionType')]",
+              "routingWeight": "[parameters('routingweight')]"
+              
+            }
+          }
+    ]
+}
+
+
+
+
+

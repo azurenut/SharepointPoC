@@ -1,0 +1,162 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "OutsideRouteTableName": {
+        "type": "string",
+        "defaultValue": "netazneipinfudr-outside",
+        "metadata": {
+          "description": "Name for Outside Subnet's route table."
+        }
+      },
+      "InternalRouteTableName": {
+        "type": "string",
+        "defaultValue": "netazneipinfudr-internal",
+        "metadata": {
+          "description": "Name for Internal Subnet's route table."
+        }  
+      }, 
+      "InsideRouteTableName": {
+          "type": "string",
+          "defaultValue": "netazneipinfudr-inside",
+          "metadata": {
+            "description": "Name for Inside Subnet's route table."
+          }
+        },   
+        "InfraRouteTableName": {
+          "type": "string",
+          "defaultValue": "netazneipinfudr-inf",
+          "metadata": {
+            "description": "Name for Infrastructure Subnet's route table."
+          }
+        },   
+        "BackEndRouteTableName": {
+          "type": "string",
+          "defaultValue": "netazneipinfudr-backend",
+          "metadata": {
+            "description": "Name for Backend Subnet's route table."
+          }
+        },
+        "F5InsideRouteTableName": {
+            "type": "string",
+            "defaultValue": "netazneipinfudr-F5Inside",
+            "metadata": {
+              "description": "Name for Backend Subnet's route table."
+            }
+          }             
+    },
+    "variables": {
+    },
+    "resources": [
+      {
+        "apiVersion": "2015-06-15",
+        "type": "Microsoft.Network/routeTables",
+        "name": "[parameters('OutsideRouteTableName')]",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "Route Table - Outside Subnet"
+        },
+        "properties": {
+          "routes": [
+            
+          ]
+        }
+      },
+      {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Network/routeTables",
+          "name": "[parameters('InternalRouteTableName')]",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Route Table - Internal DMZ Subnet"
+          },
+          "properties": {
+            "routes": [
+              
+            ]
+          }
+        },
+        {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Network/routeTables",
+          "name": "[parameters('InsideRouteTableName')]",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Route Table - Inside Subnet"
+          },
+          "properties": {
+            "routes": [
+              
+            ]
+          }
+        },
+        {
+          "apiVersion": "2015-06-15",
+          "type": "Microsoft.Network/routeTables",
+          "name": "[parameters('InfraRouteTableName')]",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "displayName": "Route Table - Infrastructure Subnet"
+          },
+          "properties": {
+            "routes": [
+               
+            ]
+          }
+        },
+      {
+        "apiVersion": "2015-06-15",
+        "type": "Microsoft.Network/routeTables",
+        "name": "[parameters('BackEndRouteTableName')]",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "Route Table - BackEnd Subnet"
+        },
+        "properties": {
+          "routes": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "2015-06-15",
+        "type": "Microsoft.Network/routeTables",
+        "name": "[parameters('F5InsideRouteTableName')]",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "Route Table - F5 Inside Subnet"
+        },
+        "properties": {
+          "routes": [
+            
+          ]
+        }
+      }
+    ],
+    "outputs": {
+      "outsideid" : {
+          "type": "string",
+          "value": "[resourceId('Microsoft.Network/routeTables',parameters('OutsideRouteTableName'))]"
+      },
+      "insideid" : {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Network/routeTables',parameters('InsideRouteTableName'))]"
+        },
+        "internalid" : {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Network/routeTables',parameters('InternalRouteTableName'))]"
+        },
+        "infraid" : {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/routeTables',parameters('InfraRouteTableName'))]"
+        },
+        "backendid" : {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/routeTables',parameters('BackendRouteTableName'))]"
+        },
+        "f5insideid" : {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/routeTables',parameters('F5InsideRouteTableName'))]"
+        }
+      } 
+    }

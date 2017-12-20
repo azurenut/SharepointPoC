@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Vault"
+      }
+    },
+    "policyname": {
+      "type": "string"
+    },
+    "scheduleRunTimes": {
+      "type": "array",
+      "metadata": {
+        "description": "Times in day when backup should be triggered. e.g. 01:00, 13:00. This will be used in LTR too for daily, weekly, monthly and yearly backup."
+      }
+    },
+    "dailyRetentionDurationCount": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of days you want to retain the backup"
+      }
+    },
+    "daysOfTheWeek": {
+      "type": "array",
+      "metadata": {
+        "description": "Backup will run on array of Days like, Monday, Tuesday etc. Applies in Weekly retention only."
+      }
+    },
+    "weeklyRetentionDurationCount": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of weeks you want to retain the backup"
+      }
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Region where the resources will be deployed"
+      }
+    },
+    "skuTier": {
+      "type": "string",
+      "defaultValue": "Standard",
+
+      "metadata": {
+        "description": "SKU tier for the vault"
+      }
+    }
+  },
+
+  "resources": [
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "apiVersion": "2015-11-10",
+      "name": "[parameters('vaultName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "RS0",
+        "tier": "[parameters('skuTier')]"
+      },
+      "properties": {
+      }
+    }
+    
+
+  ]
+}
+  

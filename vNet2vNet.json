@@ -1,0 +1,51 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "primarygateway": {
+        "type": "string"
+        
+      },
+      "location" : {
+        "type": "string"
+      },
+      "secondarygateway": {
+        "type": "string"
+        
+      },
+      "connectionName": {
+        "type": "string"
+        
+      },
+      "SharedKey" : {
+          "type": "string",
+          "metadata": {
+            "description": "Preshared Key for the connection"
+          }
+      }
+    },
+    "variables": {
+      
+    },
+    "resources": [
+      
+      {
+        "apiVersion": "[providers('Microsoft.Network','connections').apiVersions[0]]",
+        "type": "Microsoft.Network/connections",
+        "name": "[parameters('connectionName')]",
+        "location": "[parameters('location')]",
+        
+        "properties": {
+          "virtualNetworkGateway1": {
+            "id": "[parameters('primarygateway')]"
+          },
+          "virtualNetworkGateway2": {
+            "id": "[parameters('secondarygateway')]"
+          },
+          "connectionType": "Vnet2Vnet",
+          "routingWeight": 3,
+          "sharedKey": "[parameters('sharedKey')]"
+        }
+      }
+    ]
+  }

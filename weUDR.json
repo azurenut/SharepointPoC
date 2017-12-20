@@ -1,0 +1,783 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "OutsideRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-outside",
+      "metadata": {
+        "description": "Name for Outside Subnet's route table."
+      }
+    },
+    "InternalRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-internal",
+      "metadata": {
+        "description": "Name for Internal Subnet's route table."
+      }
+    },
+    "InsideRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-inside",
+      "metadata": {
+        "description": "Name for Inside Subnet's route table."
+      }
+    },
+    "InfraRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-inf",
+      "metadata": {
+        "description": "Name for Infrastructure Subnet's route table."
+      }
+    },
+    "BackEndRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-backend",
+      "metadata": {
+        "description": "Name for Backend Subnet's route table."
+      }
+    },
+    "GatewayRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-gateway",
+      "metadata": {
+        "description": "Name for Backend Subnet's route table."
+      }
+    },
+    "F5InsideRouteTableName": {
+      "type": "string",
+      "defaultValue": "netazweipinfudr-F5Inside",
+      "metadata": {
+        "description": "Name for Backend Subnet's route table."
+      }
+    }
+  },
+    "variables": {
+    },
+  "resources": [
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('GatewayRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - Gateway Subnet"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "gateway-local",
+            "properties": {
+              "addressPrefix": "10.101.7.224/27",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "gateway-inf",
+            "properties": {
+              "addressPrefix": "10.101.0.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-ins",
+            "properties": {
+              "addressPrefix": "10.101.2.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-out",
+            "properties": {
+              "addressPrefix": "10.101.1.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-f5",
+            "properties": {
+              "addressPrefix": "10.101.4.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-DMZ",
+            "properties": {
+              "addressPrefix": "10.101.3.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-prod1",
+            "properties": {
+              "addressPrefix": "10.101.8.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-prod2",
+            "properties": {
+              "addressPrefix": "10.101.16.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.10"
+            }
+          },
+          {
+            "name": "gateway-CPStandby",
+            "properties": {
+              "addressPrefix": "10.101.2.11/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.3.11"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('OutsideRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - Outside Subnet"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "outside-local",
+            "properties": {
+              "addressPrefix": "10.101.1.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "outside-tojump",
+            "properties": {
+              "addressPrefix": "10.101.0.6/32",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "outside-othersubnets",
+            "properties": {
+              "addressPrefix": "10.101.0.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.1.10"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('InternalRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - Internal DMZ Subnet"
+      },
+      "properties": {
+        "routes": [
+
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('InsideRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - Inside Subnet"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "inside-local",
+            "properties": {
+              "addressPrefix": "10.101.2.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "inside-jbox",
+            "properties": {
+              "addressPrefix": "10.101.0.6/32",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "Inside-to-MGMT",
+            "properties": {
+              "addressPrefix": "10.101.0.10/32",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "Inside-default",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('InfraRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - Infrastructure Subnet"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "inf-local",
+            "properties": {
+              "addressPrefix": "10.101.0.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "inf-inside",
+            "properties": {
+              "addressPrefix": "10.101.2.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "inf-outsidetest",
+            "properties": {
+              "addressPrefix": "10.101.1.4/32",
+              "nextHopType": "VnetLocal"
+            }
+          },
+
+          {
+            "name": "inf-f5inside",
+            "properties": {
+              "addressPrefix": "10.101.4.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "inf-default",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP1",
+            "properties": {
+              "addressPrefix": "10.40.16.50/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP2",
+            "properties": {
+              "addressPrefix": "10.40.16.51/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP3",
+            "properties": {
+              "addressPrefix": "10.40.22.1/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP4",
+            "properties": {
+              "addressPrefix": "10.40.22.2/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP5",
+            "properties": {
+              "addressPrefix": "10.40.8.50/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP6",
+            "properties": {
+              "addressPrefix": "10.40.8.51/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP7",
+            "properties": {
+              "addressPrefix": "10.40.8.52/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP8",
+            "properties": {
+              "addressPrefix": "10.40.8.53/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP9",
+            "properties": {
+              "addressPrefix": "10.40.8.54/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP10",
+            "properties": {
+              "addressPrefix": "10.40.8.55/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP11",
+            "properties": {
+              "addressPrefix": "10.40.8.56/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP12",
+            "properties": {
+              "addressPrefix": "10.40.8.57/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP13",
+            "properties": {
+              "addressPrefix": "10.40.16.52/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP14",
+            "properties": {
+              "addressPrefix": "10.40.16.54/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice1",
+            "properties": {
+              "addressPrefix": "192.168.2.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice2",
+            "properties": {
+              "addressPrefix": "192.168.3.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice3",
+            "properties": {
+              "addressPrefix": "10.201.36.0/22",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice4",
+            "properties": {
+              "addressPrefix": "10.201.46.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice5",
+            "properties": {
+              "addressPrefix": "10.201.50.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice6",
+            "properties": {
+              "addressPrefix": "10.201.48.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice7",
+            "properties": {
+              "addressPrefix": "10.201.51.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice8",
+            "properties": {
+              "addressPrefix": "10.201.47.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice9",
+            "properties": {
+              "addressPrefix": "10.201.49.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice10",
+            "properties": {
+              "addressPrefix": "10.70.0.0/16",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-VPNBackup",
+            "properties": {
+              "addressPrefix": "10.40.0.0/16",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-NorthEuropeEdge",
+            "properties": {
+              "addressPrefix": "10.100.0.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-NorthEuropeProd1",
+            "properties": {
+              "addressPrefix": "10.100.8.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-NorthEuropeProd2",
+            "properties": {
+              "addressPrefix": "10.100.16.0/21",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('BackEndRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - BackEnd Subnet"
+      },
+      "properties": {
+        "routes": [
+
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/routeTables",
+      "name": "[parameters('F5InsideRouteTableName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "Route Table - F5 Inside Subnet"
+      },
+      "properties": {
+        "routes": [
+          {
+            "name": "f5ins-local",
+            "properties": {
+              "addressPrefix": "10.101.4.0/24",
+              "nextHopType": "VnetLocal"
+            }
+          },
+          {
+            "name": "inf-RealexVIP1",
+            "properties": {
+              "addressPrefix": "10.40.16.50/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP2",
+            "properties": {
+              "addressPrefix": "10.40.16.51/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP3",
+            "properties": {
+              "addressPrefix": "10.40.22.1/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP4",
+            "properties": {
+              "addressPrefix": "10.40.22.2/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP5",
+            "properties": {
+              "addressPrefix": "10.40.8.50/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP6",
+            "properties": {
+              "addressPrefix": "10.40.8.51/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP7",
+            "properties": {
+              "addressPrefix": "10.40.8.52/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP8",
+            "properties": {
+              "addressPrefix": "10.40.8.53/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP9",
+            "properties": {
+              "addressPrefix": "10.40.8.54/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP10",
+            "properties": {
+              "addressPrefix": "10.40.8.55/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP11",
+            "properties": {
+              "addressPrefix": "10.40.8.56/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP12",
+            "properties": {
+              "addressPrefix": "10.40.8.57/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP13",
+            "properties": {
+              "addressPrefix": "10.40.16.52/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexVIP14",
+            "properties": {
+              "addressPrefix": "10.40.16.54/32",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice1",
+            "properties": {
+              "addressPrefix": "192.168.2.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice2",
+            "properties": {
+              "addressPrefix": "192.168.3.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice3",
+            "properties": {
+              "addressPrefix": "10.201.36.0/22",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice4",
+            "properties": {
+              "addressPrefix": "10.201.46.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice5",
+            "properties": {
+              "addressPrefix": "10.201.50.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice6",
+            "properties": {
+              "addressPrefix": "10.201.48.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice7",
+            "properties": {
+              "addressPrefix": "10.201.51.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice8",
+            "properties": {
+              "addressPrefix": "10.201.47.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice9",
+            "properties": {
+              "addressPrefix": "10.201.49.0/24",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-RealexOffice10",
+            "properties": {
+              "addressPrefix": "10.70.0.0/16",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "inf-VPNBackup",
+            "properties": {
+              "addressPrefix": "10.40.0.0/16",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          },
+          {
+            "name": "f5ins-DefaultRoute",
+            "properties": {
+              "addressPrefix": "0.0.0.0/0",
+              "nextHopType": "VirtualAppliance",
+              "nextHopIpAddress": "10.101.2.10"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "outsideid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('OutsideRouteTableName'))]"
+    },
+    "insideid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('InsideRouteTableName'))]"
+    },
+    "internalid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('InternalRouteTableName'))]"
+    },
+    "infraid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('InfraRouteTableName'))]"
+    },
+    "backendid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('BackendRouteTableName'))]"
+    },
+    "f5insideid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('F5InsideRouteTableName'))]"
+    },
+    "Gatewayid": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/routeTables',parameters('GatewayRouteTableName'))]"
+    }
+  } 
+    }

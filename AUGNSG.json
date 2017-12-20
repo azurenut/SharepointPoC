@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location" : {
+        "type": "string",
+        "defaultValue": "North Europe"
+
+       }
+    },
+    "variables": {
+      
+    },
+    "resources": [
+
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "AugmentedTest",
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            {
+              "name": "Allow_Inbound_Web",
+              "properties": {
+                "description": "InboundWebPorts",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443", "80" ],
+                "sourceAddressPrefixes": [ "1.2.3.4/32", "5.6.7.8/32", "9.10.11.12/32" ],
+                "destinationAddressPrefixes": [ "192.168.0.8/32", "192.168.0.15/32" ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_Inbound_RDP",
+              "properties": {
+                "description": "InboundRDPPorts",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "3389" ],
+                "sourceAddressPrefixes": [ "1.2.3.4/32", "5.6.7.8/32", "9.10.11.12/32" ],
+                "destinationAddressPrefixes": [ "192.168.0.0/24", "192.168.1.0/24" ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Inbound"
+              }
+            }
+
+          ]
+        }
+      }
+          ],
+    "outputs": {
+      
+    }
+
+  }

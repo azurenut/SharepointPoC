@@ -1,0 +1,61 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "Network1Name": {
+      "type": "string"
+    },
+    "Network2Name": {
+      "type": "string"
+    },
+    "Network1ID": {
+      "type": "string"
+    },
+    "Network2ID": {
+      "type": "string"
+    },
+    "VNetAccess": {
+      "type": "bool"
+    },
+    "ForwardTraffic": {
+      "type": "bool"
+    },
+    "GatewayTransit": {
+      "type": "bool"
+    },
+    "RemoteGateways": {
+      "type": "bool"
+    }
+  },
+  
+  "variables": {
+      "PeerName" : "[concat(parameters('Network1Name'),'/peer-to-',parameters('Network2Name'))]"  
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-06-01",
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "name": "[variables('PeerName')]",
+      "location": "[parameters('location')]",
+
+      "properties": {
+        "allowVirtualNetworkAccess": "[parameters('VNetAccess')]",
+        "allowForwardedTraffic": "[parameters('ForwardTraffic')]",
+        "allowGatewayTransit": "[parameters('GatewayTransit')]",
+        "useRemoteGateways": "[parameters('RemoteGateways')]",
+        "remoteVirtualNetwork": {
+          "id": "[parameters('Network2ID')]"
+        }
+      }
+    }
+       
+
+  ],
+  "outputs": {
+  }
+
+
+}

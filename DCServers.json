@@ -1,0 +1,528 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "locationcode": {
+      "type": "string"
+    },
+    "vnetRG": {
+      "type": "string"
+    },
+    "vnetName": {
+      "type": "string"
+
+    },
+    "adminusername": {
+      "type": "string"
+    },
+    "adminpassword": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string"
+
+    },
+    "StorageAccountName1": {
+      "type": "string"
+    },
+    "StorageAccountName2": {
+      "type": "string"
+    },
+    "DataDiskSize": {
+      "type": "string"
+    },
+    "SubnetName": {
+      "type": "string"
+    },
+    "AvailSetName": {
+      "type": "string"
+    },
+    "DC1Name": {
+      "type": "string"
+    },
+    "DC2Name": {
+      "type": "string"
+    },
+    "DC1IP": {
+      "type": "string"
+    },
+    "DC2IP": {
+      "type": "string"
+    },
+    "dclbname": {
+      "type": "string"
+    },
+    "privateIPAllocationMethod": {
+      "type": "string",
+      "defaultValue": "static"
+
+    },
+    "dclbIPAddress": {
+      "type": "string"
+    },
+    "dclbprobename": {
+      "type": "string"
+    },
+    "dclbprobeprotocol": {
+      "type": "string"
+    },
+    "dclbprobeport": {
+      "type": "int"
+    },
+    "blobEncryptionEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable or disable Blob encryption at Rest."
+      }
+    }
+
+
+  },
+  "variables": {
+    "storageaccountName1": "[parameters('StorageAccountName1')]",
+    "storageaccountName2": "[parameters('StorageAccountName2')]",
+    "DC1Name": "[parameters('DC1Name')]",
+    "DC2Name": "[parameters('DC2Name')]",
+    "DC1NicName": "[concat(variables('DC1Name'),'nic01')]",
+    "DC2NicName": "[concat(variables('DC2Name'),'nic01')]",
+    "dclbid": "[resourceId('Microsoft.Network/loadBalancers',parameters('dclbname'))]",
+    "Windows": {
+      "publisher": "MicrosoftWindowsServer",
+      "offer": "WindowsServer",
+      "sku": "2016-Datacenter",
+      "version": "latest"
+    },
+    "imageReference": "[variables('Windows')]",
+    "vnetID": "[resourceId(parameters('vnetRG'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('SubnetName'))]"
+
+
+
+  },
+  "resources": [
+    {
+      "apiVersion": "[providers('Microsoft.Storage','storageAccounts').apiVersions[0]]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName1')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('storageAccountName1')]",
+        "tier": "Microsoft.Storage/storageAccounts",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": "[parameters('blobEncryptionEnabled')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Storage','storageAccounts').apiVersions[0]]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName2')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('storageAccountName2')]",
+        "tier": "Microsoft.Storage/storageAccounts",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": "[parameters('blobEncryptionEnabled')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('DC1Name')]",
+      "apiVersion": "[providers('Microsoft.Compute','virtualMachines').apiVersions[0]]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('DC1Name')]",
+        "tier": "Microsoft.Compute/virtualMachines",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('DC1NicName'))]",
+        "[concat('Microsoft.Compute/availabilitySets/',parameters('AvailSetName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountName1'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('AvailSetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('DC1Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "datadisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "[parameters('DataDiskSize')]",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://', variables('storageAccountName1'), '.blob.core.windows.net/', 'vhds', '/', variables('DC1Name'), 'datadisk1', '.vhd')]"
+              },
+              "caching": "none",
+              "createoption": "Empty"
+            }
+          ],
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://', variables('storageAccountName1'), '.blob.core.windows.net/', 'vhds', '/', variables('DC1Name'), 'osdisk', '.vhd')]"
+            },
+            "caching": "readwrite",
+            "createoption": "FromImage"
+          }
+
+        },
+
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('DC1NicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat('http://', variables('storageAccountName1'), '.blob.core.windows.net')]"
+          }
+        }
+
+      }
+
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('DC2Name')]",
+      "apiVersion": "[providers('Microsoft.Compute','virtualMachines').apiVersions[0]]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('DC2Name')]",
+        "tier": "Microsoft.Compute/virtualMachines",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('DC2NicName'))]",
+        "[concat('Microsoft.Compute/availabilitySets/',parameters('AvailSetName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountName2'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('AvailSetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('DC2Name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "datadisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "[parameters('DataDiskSize')]",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://', variables('storageAccountName2'), '.blob.core.windows.net/', 'vhds/', variables('DC2Name'), 'datadisk1', '.vhd')]"
+              },
+              "caching": "none",
+              "createoption": "Empty"
+            }
+          ],
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://', variables('storageAccountName2'), '.blob.core.windows.net/', 'vhds/', variables('DC2Name'), 'osdisk', '.vhd')]"
+            },
+            "caching": "readwrite",
+            "createoption": "FromImage"
+          }
+
+        },
+
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('DC2NicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat('http://', variables('storageAccountName2'), '.blob.core.windows.net')]"
+          }
+        }
+
+      }
+
+    },
+
+    {
+      "apiVersion": "[providers('Microsoft.Network','networkInterfaces').apiVersions[0]]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('DC1NicName')]",
+      "dependson": [
+        "[concat('Microsoft.Network/loadBalancers/', parameters('dclbname'))]"
+      ],
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('DC1NicName')]",
+        "tier": "Microsoft.Network/networkInterfaces",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('dclbid'), '/backendAddressPools/', 'loadBalancerBackEnd')]"
+                }
+              ],
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('DC1IP')]",
+
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+
+
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [
+            "[parameters('DC1IP')]",
+            "[parameters('DC2IP')]",
+            "8.8.8.8"
+          ]
+        },
+        "enableIPForwarding": true
+      }
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Network','networkInterfaces').apiVersions[0]]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('DC2NicName')]",
+      "location": "[parameters('location')]",
+      "dependson": [
+        "[concat('Microsoft.Network/loadBalancers/', parameters('dclbname'))]"
+      ],
+      "tags": {
+        "resourcename": "[variables('DC2NicName')]",
+        "tier": "Microsoft.Network/networkInterfaces",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/',variables('DC1NicName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(variables('dclbid'), '/backendAddressPools/', 'loadBalancerBackEnd')]"
+                }
+              ],
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[parameters('DC2IP')]",
+
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [
+            "[parameters('DC1IP')]"
+          ]
+        },
+
+        "enableIPForwarding": true
+      }
+    },
+    {
+      "name": "[parameters('AvailSetName')]",
+      "apiVersion": "[providers('Microsoft.Compute','availabilitySets').apiVersions[0]]",
+      "type": "Microsoft.Compute/availabilitySets",
+      "tags": {
+        "resourcename": "[parameters('AvailSetName')]",
+        "tier": "Microsoft.Compute/availabilitySets",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "location": "[parameters('location')]",
+      "dependsOn": [
+
+      ]
+    },
+    {
+      "apiVersion": "2017-08-01",
+      "name": "[parameters('dclbname')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[parameters('location')]",
+      "dependsOn": [],
+      "properties": {
+        "backendAddressPools": [
+          {
+            "name": "LoadBalancerBackEnd"
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "privateIPAllocationMethod": "[parameters('privateIPAllocationMethod')]",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "privateIPAddress": "[parameters('dclbIPAddress')]"
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "InboundLDAP",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(variables('dclbid'),'/frontendIPconfigurations/loadBalancerFrontEnd')]"
+              },
+              "backendAddressPool": {
+                "id": "[concat(variables('dclbid'),'/backendAddressPools/loadBalancerBackEnd')]"
+              },
+              "protocol": "[parameters('dclbprobeprotocol')]",
+              "frontendPort": "[parameters('dclbprobeport')]",
+              "backendPort": "[parameters('dclbprobeport')]",
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "loadDistribution" : "SourceIP",
+              "probe": {
+                "id": "[concat(variables('dclbid'), '/probes/', parameters('dclbprobename'))]"
+              }
+
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[parameters('dclbprobename')]",
+            "properties": {
+              "protocol": "[parameters('dclbprobeprotocol')]",
+              "port": "[parameters('dclbprobeport')]",
+              "intervalInSeconds": 5,
+              "numberOfProbes" :  2
+            }
+          }
+        ]
+      }
+
+    }
+
+
+  ],
+  "outputs": {
+    "DC1ipAddress": {
+      "value": "[reference(variables('DC1NicName')).ipConfigurations[0].properties.privateIPAddress]",
+      "type": "string"
+  },
+  "DC2ipAddress": {
+    "value": "[reference(variables('DC2NicName')).ipConfigurations[0].properties.privateIPAddress]",
+    "type": "string"
+  },
+  "DC1Name" : {
+    "value": "[variables('DC1Name')]",
+    "type" : "string"
+  },
+  "DC2Name" : {
+    "value": "[variables('DC2Name')]",
+    "type" : "string"
+  }
+
+
+
+  }
+
+
+}

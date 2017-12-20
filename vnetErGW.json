@@ -1,0 +1,114 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    
+    "ERgatewayName": {
+      "type": "string"
+    },
+   
+    "ERgatewaypublicIPName": {
+      "type": "string"
+    },
+    "locationcode": {
+      "type": "string"
+    },
+    "vnetID": {
+      "type": "string"
+    }
+
+
+  },
+  "variables": {
+    "ERgatewayname": "[parameters('ERgatewayName')]",
+    "ERgatewaypublicIPName": "[parameters('ERgatewaypublicIPName')]",
+    
+    "gwSubnetRef": "[concat(parameters('vnetID'),'/subnets/','GatewaySubnet')]"
+
+
+
+
+  },
+  "resources": [
+    {
+      "apiVersion": "[providers('Microsoft.Network','publicIPAddresses').apiVersions[0]]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('ERgatewaypublicIPName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('ERgatewaypublicIPName')]",
+        "tier": "Microsoft.Network/publicIPAddresses",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Network','virtualNetworkGateways').apiVersions[0]]",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[variables('ERgatewayname')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename": "[variables('ERgatewayname')]",
+        "tier": "Microsoft.Network/virtualNetworkGateways",
+        "lifecycle": "production",
+        "dataclassification": "",
+        "costcenter": "",
+        "businessregion": "eu",
+        "cloudregion": "[parameters('location')]",
+        "company": "Realex",
+        "organization": "bts.ireland"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('ERgatewaypublicIPName'))]"
+      ],
+
+      "properties": {
+        "ipConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('gwSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('ERgatewaypublicIPName'))]"
+              }
+            },
+            "name": "ERGatewayConfig1"
+          }
+        ],
+        "sku": {
+          "name": "Standard",
+          "tier": "Standard"
+        },
+        "gatewayType": "ExpressRoute"
+
+      }
+    }
+
+
+
+  ],
+  "outputs": {
+    "ERgatewayID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworkGateways',variables('ERgatewayname'))]"
+    }
+
+
+  }
+
+
+}

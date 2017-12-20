@@ -1,0 +1,145 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Region where the resources will be deployed"
+      }
+    },
+    "locationcode": {
+      "type": "string",
+      "metadata": {
+        "description": "Code to state the Region where the resources will be deployed"
+      }
+    },
+    "azureVNetAddressPrefix": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block representing the address space of the Azure VNet"
+      }
+    },
+    "azureVNetAddressPrefix2": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block representing the address space of the Azure VNet"
+      }
+    },
+    "subnetName1": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetName2": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "VNETName": {
+      "type": "string"
+    },
+    "subnetPrefix1": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "subnetPrefix2": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "bensgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Backend NSG"
+      }
+    },
+    "be2nsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Backend NSG"
+      }
+    }
+
+  },
+    "variables": {
+      "virtualNetworkName": "[parameters('VNetName')]"
+      
+    },
+    "resources": [
+      
+      {
+        "apiVersion": "[providers('Microsoft.Network','virtualNetworks').apiVersions[0]]",
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[variables('virtualNetworkName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('virtualNetworkName')]",
+          "tier" : "Microsoft.Network/virtualNetworks",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[parameters('azureVNetAddressPrefix')]",
+              "[parameters('azureVNetAddressPrefix2')]"
+            ]
+  
+          },
+
+          "subnets": [
+            {
+              "name": "[parameters('subnetName1')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnetPrefix1')]",
+                "networkSecurityGroup": {
+                  "id": "[parameters('bensgID')]"
+                }
+              }
+            },
+            {
+              "name": "[parameters('subnetName2')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnetPrefix2')]",
+                "networkSecurityGroup": {
+                  "id": "[parameters('be2nsgID')]"
+                }
+              }
+            }
+          ]
+        }
+      }
+      
+    ],
+    "outputs": {
+      "ProdVNetName" : {
+        "type": "string",
+        "value": "[variables('virtualNetworkName')]"
+      },
+      "ProdVnetID" : {
+        "type": "string",
+        "value": "[resourceId('Microsoft.Network/VirtualNetworks',variables('virtualNetworkName'))]"
+      }
+    }
+  
+  }
+  
+  
+  

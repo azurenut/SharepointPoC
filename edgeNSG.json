@@ -1,0 +1,950 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location" : {
+        "type": "string",
+        "defaultValue": "North Europe"
+
+       },
+       "locationcode" : {
+        "type": "string"
+       }
+    },
+    "variables": {
+      "OutsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfoutnsg')]",
+      "InternalDMZNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfintnsg')]",
+      "InsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfinsnsg')]",
+      "f5InsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinff5insnsg')]",
+      "InfrastructureNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfinfnsg')]"
+    },
+    "resources": [
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('OutsideSubnetNSGName')]",
+        "tags": {
+          "resourcename" : "[variables('OutsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            {
+              "name": "Out-LB_Inbound",
+              "properties": {
+                "description": "Allow AzureLoadBalancerProbes",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443", "1443", "2443" ],
+                "sourceAddressPrefix": "AzureLoadBalancer",
+                "destinationAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Out_SSL_Inbound",
+              "properties": {
+                "description": "Allow SSL",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443", "1443", "2443" ],
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Out_CP_Inbound",
+              "properties": {
+                "description": "Allow CPComms",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "access": "Allow",
+                "priority": 120,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Out_CP_Outbound",
+              "properties": {
+                "description": "Allow CPComms",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "access": "Allow",
+                "priority": 120,
+                "direction": "Outbound"
+              }
+            },
+
+            {
+              "name": "Out_Traffic_Outbound",
+              "properties": {
+                "description": "Allow SSL",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": ["25", "53", "80","123", "443", "587", "1433", "10255", "11000-11999" ],
+                "sourceAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 1000,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Out_TrafficLB_Outbound",
+              "properties": {
+                "description": "Allow SSL",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.1.10/32", "10.100.1.11/32" ],
+                "destinationAddressPrefix": "AzureLoadBalancer",
+                "access": "Allow",
+                "priority": 1001,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Out-DenyInbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Inbound"
+              }
+            }
+
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InternalDMZNSGName')]",
+        "tags": {
+          "resourcename" : "[variables('InternalDMZNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InsideSubnetNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('InsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('f5InsideSubnetNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('f5InsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+            {
+              "name": "Allow_RDP_Temp",
+              "properties": {
+                "description": "Allow RDP from the Internet",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InfrastructureNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('InfrastructureNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+            {
+              "name": "Allow_Active_Directory_Tcp_Inbound",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "135", "138", "139", "389", "445", "3268", "3269", "464", "5722", "9389", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.101.0.0/24", "10.101.8.0/21", "10.100.2.10/32", "10.100.2.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_Active_Directory_Tcp_Outbound",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "135", "138", "139", "389", "445", "3268", "3269", "464", "5722", "9389", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.101.0.0/24", "10.101.8.0/21", "10.100.2.10/32", "10.100.2.11/32" ],
+                "access": "Allow",
+                "priority": 100,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_Active_DirectoryOut2_Tcp",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "135", "138", "139", "389", "445", "3268", "3269", "464", "5722", "9389", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 101,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_Active_Directory_UDP_Inbound",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Udp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "123", "137", "138", "139", "389", "445", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.101.0.0/24", "10.101.8.0/21" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_Active_Directory_UDP_Outbound",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Udp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "123", "137", "138", "139", "389", "445", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.101.0.0/24", "10.101.8.0/21" ],
+                "access": "Allow",
+                "priority": 110,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_Active_Directory_UDP2_Outbound",
+              "properties": {
+                "description": "Allow Activedirectory Traffic",
+                "protocol": "Udp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53", "88", "123", "137", "138", "139", "389", "445", "49152-65535" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 111,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_DNSfromF5_Inbound",
+              "properties": {
+                "description": "Allow DNS from F5 inbound.",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "53",
+                "sourceAddressPrefixes": [ "10.100.2.20/32", "10.100.2.21/32", "10.100.0.20/32", "10.100.0.21/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 120,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_FTP_Inbound",
+              "properties": {
+                "description": "Allow FTP to MGMT",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "21",
+                "sourceAddressPrefixes": [ "10.100.0.4/32", "10.100.0.10/32", "10.100.0.20/32", "10.100.0.21/32", "10.100.2.20/32", "10.100.2.21/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32" ],
+                "access": "Allow",
+                "priority": 140,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_FTP_Outbound",
+              "properties": {
+                "description": "Allow FTP to MGMT",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "21",
+                "sourceAddressPrefixes": [ "10.100.0.4/32", "10.100.0.10/32", "10.100.0.20/32", "10.100.0.21/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32" ],
+                "access": "Allow",
+                "priority": 140,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_RDP_Inbound",
+              "properties": {
+                "description": "Allow RDP from the Realex",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefixes": [ "192.168.2.0/24", "192.168.3.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32" ],
+                "access": "Allow",
+                "priority": 150,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_RDP_Inside_Inbound",
+              "properties": {
+                "description": "Allow RDP from the Realex",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32", "10.100.0.16/32", "10.100.0.14/32", "10.100.0.26/32" ],
+                "access": "Allow",
+                "priority": 151,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_RDP_Inside_Outbound",
+              "properties": {
+                "description": "Allow RDP from the Realex",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32", "10.100.0.16/32" ],
+                "access": "Allow",
+                "priority": 151,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Allow_RADIUS_Inbound",
+              "properties": {
+                "description": "Allow Radius",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "1812", "1645" ],
+                "sourceAddressPrefixes": [ "10.100.0.10/32", "10.101.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 160,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Allow_RADIUS_Outbound",
+              "properties": {
+                "description": "Allow Radius",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "1812", "1645" ],
+                "sourceAddressPrefixes": [ "10.100.0.10/32", "10.101.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 160,
+                "direction": "Outbound"
+              }
+            },
+
+            {
+              "name": "CP-SmartConsole_Inbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443", "18264", "18190", "19009" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32", "10.101.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32", "10.101.0.10/32" ],
+                "access": "Allow",
+                "priority": 165,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "CP-SmartConsole_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443", "18264", "18190", "19009" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32", "10.101.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32", "10.101.0.10/32" ],
+                "access": "Allow",
+                "priority": 165,
+                "direction": "Outbound"
+              }
+            },
+
+            {
+              "name": "CP-GatewayWebConsole_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "22", "8443" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.2.10/32", "10.100.2.11/32" ],
+                "access": "Allow",
+                "priority": 171,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "CP-Services_TCP_Inbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "256", "257", "258", "259", "265", "900", "18181", "18183", "18184", "18185", "18186", "18187", "18191", "18193", "18207", "18208", "18210", "18211", "18212", "18231", "18264", "18265", "19190" ],
+                "sourceAddressPrefixes": [ "10.100.2.10/32", "10.100.2.11/32", "10.101.2.10/32", "10.101.2.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32" ],
+                "access": "Allow",
+                "priority": 175,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "CP-Services_UDP_Inbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "Udp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "18212" ],
+                "sourceAddressPrefixes": [ "10.100.2.10/32", "10.100.2.11/32", "10.101.2.10/32", "10.101.2.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32" ],
+                "access": "Allow",
+                "priority": 176,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-F5Mgmt_Inbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.20/32", "10.100.0.21/32" ],
+                "access": "Allow",
+                "priority": 170,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-F5Mgmt_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "443" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.20/32", "10.100.0.21/32" ],
+                "access": "Allow",
+                "priority": 170,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf-LDAPLB_Inbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "389" ],
+                "sourceAddressPrefix": "AzureLoadBalancer",
+                "destinationAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "access": "Allow",
+                "priority": 180,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-F5LDAP_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "389" ],
+                "sourceAddressPrefixes": [ "10.100.0.20/32", "10.100.0.21/32", "10.100.0.15/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.50/32" ],
+                "access": "Allow",
+                "priority": 180,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf-CPManagementSync_Inbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "18221" ],
+                "sourceAddressPrefixes": [ "10.101.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32" ],
+                "access": "Allow",
+                "priority": 190,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-CPManagementSync_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "18221" ],
+                "sourceAddressPrefixes": [ "10.100.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.101.0.10/32" ],
+                "access": "Allow",
+                "priority": 190,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf-CPMGTM-SSH_Inbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "22" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32", "10.100.0.15/32" ],
+                "access": "Allow",
+                "priority": 195,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-CPMGTM-SSH_Outbound",
+              "properties": {
+                "description": "Allow inbound access using the SmartConsole GUI client",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "22" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32", "10.100.0.15/32" ],
+                "access": "Allow",
+                "priority": 195,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Out_CPMGMTtoGateways_Outbound",
+              "properties": {
+                "description": "Allow CPComms",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "18191",
+                "sourceAddressPrefixes": [ "10.100.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.100.2.10/32", "10.100.2.11/32", "10.101.2.10/32", "10.101.2.11/32" ],
+                "access": "Allow",
+                "priority": 200,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_TwistlockComms_Inbound",
+              "properties": {
+                "description": "Allow Twistlock Communications",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.100.16.0" ],
+                "destinationAddressPrefixes": [ "10.100.0.15/32" ],
+                "access": "Allow",
+                "priority": 210,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_TwistlockComms_Outbound",
+              "properties": {
+                "description": "Allow Twistlock Communications",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.0.15/32" ],
+                "access": "Allow",
+                "priority": 210,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_TwistlockComms2_Outbound",
+              "properties": {
+                "description": "Allow Twistlock Communications",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.15/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.100.16.0" ],
+                "access": "Allow",
+                "priority": 211,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_TempAlienVault_Inbound",
+              "properties": {
+                "description": "Allow AlienVault",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "192.168.2.151" ],
+                "destinationAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.100.16.0" ],
+                "access": "Allow",
+                "priority": 212,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_TempAlienVault_Outbound",
+              "properties": {
+                "description": "Allow AlienVault",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.0/24", "10.100.8.0/21", "10.100.16.0" ],
+                "destinationAddressPrefixes": [ "192.168.2.151" ],
+                "access": "Allow",
+                "priority": 212,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_TempLinux_Inbound",
+              "properties": {
+                "description": "Allow AlienVault",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.6/32", "10.100.0.12/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32", "10.100.0.12/32" ],
+                "access": "Allow",
+                "priority": 213,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_TempLinux_Outbound",
+              "properties": {
+                "description": "Allow AlienVault",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.6/32", "10.100.0.12/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32", "10.100.0.12/32" ],
+                "access": "Allow",
+                "priority": 213,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_CPMGMT_Inbound",
+              "properties": {
+                "description": "Allow CPMGMT",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.101.0.10/32", "10.101.2.10/32", "10.101.2.11/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.10/32" ],
+                "access": "Allow",
+                "priority": 220,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_CPMGMT_Outbound",
+              "properties": {
+                "description": "Allow CPMGMT",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.10/32" ],
+                "destinationAddressPrefixes": [ "10.101.0.10/32", "10.101.2.10/32", "10.101.2.11/32" ],
+                "access": "Allow",
+                "priority": 220,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_JumpboxFile_Inbound",
+              "properties": {
+                "description": "Allow Files Sharing",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.101.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.6/32" ],
+                "access": "Allow",
+                "priority": 230,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_JumpboxFile_Outbound",
+              "properties": {
+                "description": "Allow File Sharing",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.101.0.6/32" ],
+                "access": "Allow",
+                "priority": 230,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_Pentest_Inbound",
+              "properties": {
+                "description": "Temp Pen test",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "22", "8834" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.17/32" ],
+                "access": "Allow",
+                "priority": 240,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_Pentest_Outbound",
+              "properties": {
+                "description": "Temp Pen test",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "22", "8834" ],
+                "sourceAddressPrefixes": [ "10.100.0.6/32" ],
+                "destinationAddressPrefixes": [ "10.100.0.17/32" ],
+                "access": "Allow",
+                "priority": 240,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf_SMTP_Inbound",
+              "properties": {
+                "description": "Temp Pen test",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "25" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24", "10.101.0.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.0.25/32", "10.100.0.26/32" ],
+                "access": "Allow",
+                "priority": 250,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf_SMTP_loadbalancer",
+              "properties": {
+                "description": "SMTP-loadbalancer",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "25" ],
+                "sourceAddressPrefix": "AzureLoadBalancer",
+                "destinationAddressPrefixes": [ "10.100.0.26/32"],
+                "access": "Allow",
+                "priority": 260,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Inf-WebTraffic_Outbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "80", "443", "8443" ],
+                "sourceAddressPrefixes": [ "10.100.0.0/24" ],
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 400,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf-DNSLookup_Outbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRanges": [ "53" ],
+                "sourceAddressPrefixes": [ "10.100.0.4/32", "10.100.0.5/32" ],
+                "destinationAddressPrefixes": [ "8.8.8.8", "8.8.4.4" ],
+                "access": "Allow",
+                "priority": 405,
+                "direction": "Outbound"
+              }
+            },
+            {
+              "name": "Inf-DenyInbound",
+              "properties": {
+                "description": "Allow inbound access to CPMGMT",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Deny",
+                "priority": 4096,
+                "direction": "Inbound"
+              }
+            },
+            {
+              "name": "Test",
+              "properties": {
+                "description": "Allow Testing to Be subnets",
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefixes": [ "10.100.0.0/24" ],
+                "destinationAddressPrefixes": [ "10.100.2.0/24", "10.100.8.0/21" ],
+                "access": "Allow",
+                "priority": 500,
+                "direction": "Outbound"
+              }
+            }
+
+          ],
+      "defaultSecurityRules": [
+        {
+          "name": "AllowVnetInBound",
+          "etag": "W/\"0c66b100-d366-4c8f-8bc1-ff08fca92b96\"",
+          "properties": {
+            "provisioningState": "Succeeded",
+            "description": "Allow inbound traffic from all VMs in VNET",
+            "protocol": "*",
+            "sourcePortRange": "*",
+            "destinationPortRange": "*",
+            "sourceAddressPrefix": "VirtualNetwork",
+            "destinationAddressPrefix": "VirtualNetwork",
+            "access": "Allow",
+            "priority": 65000,
+            "direction": "Inbound",
+            "sourceAddressPrefixes": [],
+            "destinationAddressPrefixes": []
+          }
+        }
+          ]
+        }
+      }
+      
+    ],
+    "outputs": {
+      "outnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('OutsideSubnetNSGName'))]"
+      },
+      "insnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InsideSubnetNSGName'))]"
+      },
+      "f5insnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('f5InsideSubnetNSGName'))]"
+      },
+      "intdmznsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InternalDMZNSGName'))]"
+      },
+      "infnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InfrastructureNSGName'))]"
+      }
+    }
+
+  }

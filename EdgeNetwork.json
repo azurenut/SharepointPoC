@@ -1,0 +1,285 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Region where the resources will be deployed"
+      },
+
+      "allowedValues": [
+        "North Europe",
+        "West Europe"
+      ]
+    },
+    "locationcode": {
+      "type": "string",
+      "metadata": {
+        "description": "Code to state the Region where the resources will be deployed"
+      },
+
+      "allowedValues": [
+        "ne",
+        "we"
+      ]
+    },
+
+
+    "azureVNetAddressPrefix": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block representing the address space of the Azure VNet"
+      }
+    },
+    "subnetName1": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetPrefix1": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "subnetName2": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetPrefix2": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "subnetName3": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetPrefix3": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "subnetName4": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetPrefix4": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "subnetName5": {
+      "type": "string",
+
+      "metadata": {
+        "description": "Aribtrary name for the Azure Subnet"
+      }
+    },
+    "subnetPrefix5": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
+      }
+    },
+    "gatewaySubnetPrefix": {
+      "type": "string",
+
+      "metadata": {
+        "description": "CIDR block for gateway subnet, subsset of azureVNetAddressPrefix address space"
+      }
+    },
+    "outnsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Outside NSG"
+      }
+    },
+    "VNETName": {
+      "type": "string"
+    },
+    "insnsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Inside NSG"
+      }
+    },
+    "intdmznsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Internal DMZ NSG"
+      }
+    },
+    "infnsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the Backend NSG"
+      }
+
+    },
+    "f5insnsgID": {
+      "type": "string",
+      "metadata": {
+        "description": "ID of the F5 Inside NSG"
+      }
+
+    },
+    "infudrID": {
+      "type": "string"
+    },
+    "insudrID": {
+      "type": "string"
+    },
+    "outudrID": {
+      "type": "string"
+    },
+    "intudrID": {
+      "type": "string"
+    },
+    "f5insudrID": {
+      "type": "string"
+    },
+    "gatewayudrID": {
+      "type" : "string"
+    }
+  },
+  "variables": {
+    "virtualNetworkName": "[parameters('VNETName')]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "gatewaySubnetRef": "[concat(variables('vnetID'),'/subnets/','GatewaySubnet')]"
+  },
+  "resources": [
+    
+    {
+      "apiVersion": "[providers('Microsoft.Network','virtualNetworks').apiVersions[0]]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "resourcename" : "[variables('virtualNetworkName')]",
+        "tier" : "Microsoft.Network/virtualNetworks",
+        "lifecycle" : "production",
+        "dataclassification" : "",
+        "costcenter" : "",
+        "businessregion" : "eu",
+        "cloudregion" : "[parameters('location')]",
+        "company" : "Realex",
+        "organization" : "bts.ireland"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('azureVNetAddressPrefix')]"
+          ]
+
+        },
+
+        "subnets": [
+          {
+            "name": "[parameters('subnetName1')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix1')]",
+              "networkSecurityGroup": {
+                "id": "[parameters('infnsgID')]"
+              },
+              "routeTable" : {
+                "id": "[parameters('infudrID')]"
+              }
+            }
+            
+          },
+          {
+            "name": "[parameters('subnetName2')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix2')]",
+              
+              "routeTable" : {
+                "id": "[parameters('outudrID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('subnetName3')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix3')]",
+              "networkSecurityGroup": {
+                "id": "[parameters('insnsgID')]"
+              },
+              "routeTable" : {
+                "id": "[parameters('insudrID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('subnetName4')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix4')]",
+              "networkSecurityGroup": {
+                "id": "[parameters('intdmznsgID')]"
+              },
+              "routeTable" : {
+                "id": "[parameters('intudrID')]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('subnetName5')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix5')]",
+              "networkSecurityGroup": {
+                "id": "[parameters('f5insnsgID')]"
+              },
+              "routeTable" : {
+                "id": "[parameters('f5insudrID')]"
+              }
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[parameters('gatewaySubnetPrefix')]",
+              "routeTable": {
+                "id": "[parameters('gatewayudrID')]"
+              }
+            }
+          }
+        ]
+      }
+    }
+    
+  ],
+  "outputs": {
+    "EdgeVNetName" : {
+      "type": "string",
+      "value": "[variables('virtualNetworkName')]"
+    },
+    "EdgeVnetID" : {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/VirtualNetworks',variables('virtualNetworkName'))]"
+    }
+  }
+
+}
+
+

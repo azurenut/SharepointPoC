@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "locationcode": {
+      "type": "string"
+    },
+    "BackEndNSGName": {
+      "type": "string"
+    },
+    "BackEnd2NSGName": {
+      "type": "string"
+    }
+
+
+
+
+
+  },
+    "variables": {
+      
+      "BackEndNSGName" : "[parameters('BackEndNSGName')]"
+    },
+  "resources": [
+
+    {
+      "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('BackEndNSGName')]",
+      "location": "[parameters('location')]",
+
+      "properties": {
+        "securityRules": [
+
+        ]
+      }
+    },
+    {
+      "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('BackEnd2NSGName')]",
+      "location": "[parameters('location')]",
+
+      "properties": {
+        "securityRules": [
+
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "bensgID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('BackEndNSGName'))]"
+    },
+    "be2nsgID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkSecurityGroups',parameters('BackEnd2NSGName'))]"
+    }
+  }
+  }

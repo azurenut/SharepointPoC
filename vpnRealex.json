@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+       "location" : {
+           "type": "string"
+           
+       },
+       "localaddressPrefix" : {
+        "type": "string"
+       },
+       "localGatewayIpAddress" :{
+        "type": "string"   
+       },
+       "vngId" :{
+        "type": "string"   
+       },
+       "sharedKey" :{
+        "type": "string"   
+       },
+       "connectionName" :{
+        "type": "string"   
+       },
+       "localGatewayName" :{
+        "type": "string"   
+       }
+
+
+    },
+    "variables": {
+
+
+
+
+
+    },
+    "resources": [
+        {
+            "apiVersion": "[providers('Microsoft.Network','localNetworkGateways').apiVersions[0]]",
+            "type": "Microsoft.Network/localNetworkGateways",
+            "name": "[parameters('localGatewayName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+              "localNetworkAddressSpace": {
+                "addressPrefixes": [
+                  "[parameters('localAddressPrefix')]"
+                ]
+              },
+              "gatewayIpAddress": "[parameters('localGatewayIpAddress')]"
+            }
+          },
+          {
+            "apiVersion": "[providers('Microsoft.Network','connections').apiVersions[0]]",
+            "name": "[parameters('connectionName')]",
+            "type": "Microsoft.Network/connections",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+              "[concat('Microsoft.Network/localNetworkGateways/', parameters('localGatewayName'))]"
+            ],
+            "properties": {
+              "virtualNetworkGateway1": {
+                "id": "[parameters('vngId')]"
+              },
+              "localNetworkGateway2": {
+                "id": "[resourceId('Microsoft.Network/localNetworkGateways', parameters('localGatewayName'))]"
+              },
+              "connectionType": "IPsec",
+              "routingWeight": 10,
+              "sharedKey": "[parameters('sharedKey')]"
+            }
+          }
+
+
+    ],
+    "outputs": {}
+  
+  }
+  

@@ -60,7 +60,7 @@
 
   },
   "variables": {
-    "storageaccountName" : "[concat('actaz',parameters('locationcode'),'ipinfstr03')]",
+    "storageaccountName" : "[concat('actaz',parameters('locationcode'),'ipinfstr03b')]",
     "vmName" : "[concat('a',parameters('locationcode'),'wjb01')]",
     "vmNicName" : "[concat(variables('vmName'),'nic01')]",
     "publicIPAddressType" : "Dynamic",

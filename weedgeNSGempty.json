@@ -1,0 +1,157 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location" : {
+        "type": "string",
+        "defaultValue": "West Europe"
+
+       },
+       "locationcode" : {
+        "type": "string"
+       }
+    },
+    "variables": {
+      "OutsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfoutnsg')]",
+      "InternalDMZNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfintnsg')]",
+      "InsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfinsnsg')]",
+      "f5InsideSubnetNSGName" : "[concat('netaz',parameters('locationcode'),'ipinff5insnsg')]",
+      "InfrastructureNSGName" : "[concat('netaz',parameters('locationcode'),'ipinfinfnsg')]"
+    },
+    "resources": [
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('OutsideSubnetNSGName')]",
+        "tags": {
+          "resourcename" : "[variables('OutsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InternalDMZNSGName')]",
+        "tags": {
+          "resourcename" : "[variables('InternalDMZNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InsideSubnetNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('InsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+            
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('f5InsideSubnetNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('f5InsideSubnetNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+           
+          ]
+        }
+      },
+      {
+        "apiVersion": "[providers('Microsoft.Network','networkSecurityGroups').apiVersions[0]]",
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "name": "[variables('InfrastructureNSGName')]",
+        "location": "[parameters('location')]",
+        "tags": {
+          "resourcename" : "[variables('InfrastructureNSGName')]",
+          "tier" : "Microsoft.Network/networkSecurityGroups",
+          "lifecycle" : "production",
+          "dataclassification" : "",
+          "costcenter" : "",
+          "businessregion" : "eu",
+          "cloudregion" : "[parameters('location')]",
+          "company" : "Realex",
+          "organization" : "bts.ireland"
+        },
+        "properties": {
+          "securityRules": [
+           
+          ]
+        }
+      }
+      
+    ],
+    "outputs": {
+      "outnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('OutsideSubnetNSGName'))]"
+      },
+      "insnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InsideSubnetNSGName'))]"
+      },
+      "f5insnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('f5InsideSubnetNSGName'))]"
+      },
+      "intdmznsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InternalDMZNSGName'))]"
+      },
+      "infnsgID" : {
+        "type": "string",
+        "value" : "[resourceId('Microsoft.Network/networkSecurityGroups',variables('InfrastructureNSGName'))]"
+      }
+    }
+
+  }

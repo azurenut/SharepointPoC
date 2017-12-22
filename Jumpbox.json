@@ -2,12 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location" : {
+    "location": {
       "type": "string"
-     },
-     "locationcode" : {
+    },
+    "locationcode": {
       "type": "string"
-     },
+    },
     "vnetRG": {
       "type": "string"
     },
@@ -24,8 +24,13 @@
     "DataDiskSize": {
       "type": "string"
     },
-    
     "SubnetName": {
+      "type": "string"
+    },
+    "storageaccountName": {
+      "type": "string"
+    },
+    "vmName": {
       "type": "string"
     },
     "domainToJoin": {
@@ -43,10 +48,10 @@
     "domainPassword": {
       "type": "string"
     },
-    "DC1IP" : {
+    "DC1IP": {
       "type": "string"
     },
-    "DC2IP" : {
+    "DC2IP": {
       "type": "string"
     },
     "blobEncryptionEnabled": {
@@ -60,12 +65,12 @@
 
   },
   "variables": {
-    "storageaccountName" : "[concat('actaz',parameters('locationcode'),'ipinfstr03b')]",
-    "vmName" : "[concat('a',parameters('locationcode'),'wjb01')]",
-    "vmNicName" : "[concat(variables('vmName'),'nic01')]",
-    "publicIPAddressType" : "Dynamic",
-    "publicIPAddressName1" : "[concat(variables('vmName'), 'pip')]",
-   
+    "storageaccountName": "[parameters('storageaccountName')]",
+    "vmName": "[parameters('vmName')]",
+    "vmNicName": "[concat(variables('vmName'),'nic01')]",
+    "publicIPAddressType": "Dynamic",
+    "publicIPAddressName1": "[concat(variables('vmName'), 'pip')]",
+
 
     "Windows": {
       "publisher": "MicrosoftWindowsServer",
